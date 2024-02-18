@@ -1,0 +1,86 @@
+using System;
+
+class ContaComum {
+    public int Numero { get; }
+    public string Titular { get; }
+    public double Saldo { get; protected set; }
+
+    public ContaComum(int numero, string titular, double saldoInicial) {
+        Numero = numero;
+        Titular = titular;
+        Saldo = saldoInicial;
+    }
+
+    public void Depositar(double valor) {
+        Saldo += valor;
+    }
+
+    public virtual void Sacar(double valor) {
+        if (valor <= Saldo) {
+            Saldo -= valor;
+        } else {
+            Console.WriteLine("Saldo insuficiente.");
+        }
+    }
+
+    public void MostrarSaldo() {
+        Console.WriteLine($"Saldo da conta #{Numero}: {Saldo:C2}");
+    }
+}
+
+class ContaEmpresa : ContaComum {
+    public double LimiteEmprestimo { get; }
+    public double SaldoEmprestimo { get; private set; }
+
+    public ContaEmpresa(int numero, string titular, double saldoInicial, double limiteEmprestimo) 
+        : base(numero, titular, saldoInicial) {
+        LimiteEmprestimo = limiteEmprestimo;
+        SaldoEmprestimo = 0;
+    }
+
+    public void RealizarEmprestimo(double valor) {
+        if (valor <= LimiteEmprestimo) {
+            SaldoEmprestimo += valor;
+            Saldo += valor;
+            Console.WriteLine($"Empréstimo de {valor:C2} realizado com sucesso.");
+        } else {
+            Console.WriteLine("Limite de empréstimo excedido.");
+        }
+    }
+
+    public override void Sacar(double valor) {
+        double saldoTotal = Saldo + SaldoEmprestimo;
+        if (valor <= saldoTotal) {
+            if (valor <= Saldo) {
+                Saldo -= valor;
+            } else {
+                double restante = valor - Saldo;
+                Saldo = 0;
+                SaldoEmprestimo -= restante;
+            }
+            Console.WriteLine($"Saque de {valor:C2} realizado com sucesso.");
+        } else {
+            Console.WriteLine("Saldo insuficiente (incluindo empréstimo).");
+        }
+    }
+}
+
+class Program {
+    static void Main(string[] args) {
+        ContaEmpresa contaEmpresa = new ContaEmpresa(123, "Empresa ABC", 1000.0, 5000.0);
+        contaEmpresa.Depositar(500.0);
+        contaEmpresa.MostrarSaldo();
+
+        Console.WriteLine("Realizando um saque de 1500.00");
+        contaEmpresa.Sacar(1500.0);
+        contaEmpresa.MostrarSaldo();
+
+        Console.WriteLine("Realizando um empréstimo de 2000.00");
+        contaEmpresa.RealizarEmprestimo(2000.0);
+        contaEmpresa.MostrarSaldo();
+
+        Console.WriteLine("Realizando um saque de 3000.00");
+        contaEmpresa.Sacar(3000.0);
+        contaEmpresa.MostrarSaldo();
+    }
+}
